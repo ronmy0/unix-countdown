@@ -36,14 +36,17 @@
       background-position: center;
     }
 
-    /* Layout */
+    /* Center content with safe-area padding for notched phones */
     .wrap{
       position: relative;
       min-height: 100%;
       display: grid;
       place-items: center;
-      padding: 18px;
-      padding-bottom: 28px; /* a little breathing room */
+      padding:
+        calc(18px + env(safe-area-inset-top))
+        calc(18px + env(safe-area-inset-right))
+        calc(28px + env(safe-area-inset-bottom))
+        calc(18px + env(safe-area-inset-left));
     }
 
     .card{
@@ -88,49 +91,83 @@
     .btn:hover{ background: rgba(255,255,255,0.16); transform: translateY(-1px); }
     .btn:active{ transform: translateY(0); }
 
-		/* Countdown: vertical by default (phones) */
-		.countdown{
-  		display: flex;
-  		flex-direction: column;
-  		gap: 14px;
-  		align-items: stretch;
-		}
+    /* Countdown: vertical by default (phones) */
+    .countdown{
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      align-items: stretch;
+    }
 
-		/* Countdown unit */
-		.unit{
-  		display: grid;
-  		grid-template-columns: 1fr auto;
-  		align-items: baseline;
-  		gap: 12px;
-  		padding: 18px 18px;
-  		border-radius: 18px;
-  		border: 1px solid rgba(255,255,255,0.18);
-  		background: rgba(0,0,0,0.25);
-		}
+    /* Each unit row: number left, label right */
+    .unit{
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: baseline;
+      gap: 12px;
+      padding: 18px 18px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(0,0,0,0.25);
+    }
 
-		/* Desktop / landscape: centered horizontal layout */
-		@media (min-width: 820px) and (orientation: landscape){
-  		.countdown{
-    		flex-direction: row;
-    		flex-wrap: wrap;
-    		justify-content: center;
-    		align-items: stretch;
-    		gap: 18px;
-  		}
+    .num{
+      font-variant-numeric: tabular-nums;
+      font-weight: 900;
+      line-height: 1;
+      color: var(--accent);
+      font-size: clamp(56px, 11vw, 120px);
+      text-shadow: 0 10px 30px rgba(0,0,0,0.45);
+    }
 
-  		.unit{
-    		width: 220px;
-    		grid-template-columns: 1fr;
-    		text-align: center;
-    		padding: 26px 18px 22px;
-  		}
+    .label{
+      font-size: 13px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--muted);
+      justify-self: end;
+      align-self: center;
+      white-space: nowrap;
+    }
 
-  		.label{
-    		justify-self: center;
-    		margin-top: 10px;
-  		}
-		}
+    .meta{
+      margin-top: 14px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.35;
+      user-select: none;
+      word-break: break-word;
+    }
 
+    /* Desktop/landscape: horizontal centered tiles */
+    @media (min-width: 820px) and (orientation: landscape){
+      .card{ padding: 26px 28px 22px; }
+
+      .countdown{
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center; /* key: stays centered when some units hide */
+        align-items: stretch;
+        gap: 18px;
+      }
+
+      .unit{
+        width: 240px;
+        grid-template-columns: 1fr; /* stack label under number */
+        text-align: center;
+        padding: 26px 18px 22px;
+      }
+
+      .label{
+        justify-self: center;
+        margin-top: 10px;
+      }
+
+      .num{
+        font-size: clamp(78px, 6.2vw, 140px);
+      }
+    }
 
     /* Modal */
     .modal{
@@ -201,8 +238,8 @@
     /* Credit box with auto-hide */
     .credit{
       position: fixed;
-      left: 14px;
-      bottom: 14px;
+      left: calc(14px + env(safe-area-inset-left));
+      bottom: calc(14px + env(safe-area-inset-bottom));
       padding: 10px 14px;
       border-radius: 14px;
       background: rgba(0,0,0,0.45);
@@ -291,13 +328,18 @@
   </div>
 
   <script>
-    /* CONFIG */
-    const BACKGROUND_IMAGE = "background.jpg";
+    /* =======================
+       CONFIG (EDIT THESE)
+       ======================= */
+    const BACKGROUND_IMAGE = "background.jpg"; // file next to index.html
     const IMAGE_CREDIT_TEXT = "NASA – James Webb: Carina Nebula";
     const IMAGE_CREDIT_URL  = "https://images.nasa.gov/";
 
     const COOKIE = "countdown_target_unix";
 
+    /* =======================
+       INITIAL SETUP
+       ======================= */
     const bg = document.getElementById("bg");
     bg.style.setProperty("--bg-img", `url("${BACKGROUND_IMAGE}")`);
 
@@ -314,19 +356,22 @@
     const modal = document.getElementById("modal");
     const input = document.getElementById("unixInput");
     const error = document.getElementById("error");
-    const hint = document.getElementById("hint");
+    const hint  = document.getElementById("hint");
 
-    const uDays = document.getElementById("uDays");
-    const uHours = document.getElementById("uHours");
+    const uDays    = document.getElementById("uDays");
+    const uHours   = document.getElementById("uHours");
     const uMinutes = document.getElementById("uMinutes");
     const uSeconds = document.getElementById("uSeconds");
 
-    const daysEl = document.getElementById("days");
-    const hoursEl = document.getElementById("hours");
+    const daysEl    = document.getElementById("days");
+    const hoursEl   = document.getElementById("hours");
     const minutesEl = document.getElementById("minutes");
     const secondsEl = document.getElementById("seconds");
-    const meta = document.getElementById("meta");
+    const metaEl    = document.getElementById("meta");
 
+    /* =======================
+       COOKIE HELPERS
+       ======================= */
     function setCookie(name, value, days=365) {
       const maxAge = days * 24 * 60 * 60;
       document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(value)}; Max-Age=${maxAge}; Path=/; SameSite=Lax`;
@@ -343,16 +388,24 @@
       document.cookie = `${encodeURIComponent(name)}=; Max-Age=0; Path=/; SameSite=Lax`;
     }
 
+    /* =======================
+       INPUT PARSING
+       ======================= */
     function parseUnixSeconds(raw) {
       const s = (raw || "").trim();
       if (!/^\d+$/.test(s)) return null;
+
       const n = Number(s);
       if (!Number.isFinite(n)) return null;
+
       // If user pasted ms (13+ digits), auto-convert
       if (s.length >= 13) return Math.floor(n / 1000);
       return Math.floor(n);
     }
 
+    /* =======================
+       COUNTDOWN STATE
+       ======================= */
     let targetUnix = null;
     let timerHandle = null;
 
@@ -360,7 +413,9 @@
       error.textContent = "";
       const now = Math.floor(Date.now() / 1000);
       const example = now + 24*60*60;
-      hint.innerHTML = `Enter a Unix timestamp in <b>seconds</b>. Example: <b>${example}</b>.<br/>If you paste milliseconds (13 digits), it auto-converts.`;
+      hint.innerHTML =
+        `Enter a Unix timestamp in <b>seconds</b>. Example: <b>${example}</b>.<br/>` +
+        `If you paste milliseconds (13 digits), it auto-converts.`;
       modal.classList.add("open");
       setTimeout(() => input.focus(), 0);
     }
@@ -391,7 +446,7 @@
         minutesEl.textContent = "0";
         secondsEl.textContent = "0";
 
-        meta.textContent = "Time reached.";
+        metaEl.textContent = "Time reached.";
         return;
       }
 
@@ -404,9 +459,9 @@
       const minutes = Math.floor(diffSeconds / 60);
       const seconds = diffSeconds - minutes * 60;
 
-      // Hide leading zero units
-      uDays.style.display = (days > 0) ? "" : "none";
-      uHours.style.display = (days > 0 || hours > 0) ? "" : "none";
+      // Hide leading zero units (flex layout will re-center automatically)
+      uDays.style.display    = (days > 0) ? "" : "none";
+      uHours.style.display   = (days > 0 || hours > 0) ? "" : "none";
       uMinutes.style.display = (days > 0 || hours > 0 || minutes > 0) ? "" : "none";
       uSeconds.style.display = "";
 
@@ -416,7 +471,7 @@
       secondsEl.textContent = String(seconds);
 
       const targetDate = new Date(targetUnix * 1000);
-      meta.textContent = `Target: ${targetDate.toLocaleString()} • Unix: ${targetUnix}`;
+      metaEl.textContent = `Target: ${targetDate.toLocaleString()} • Unix: ${targetUnix}`;
     }
 
     function tick(){
@@ -430,6 +485,9 @@
       timerHandle = setInterval(tick, 250);
     }
 
+    /* =======================
+       EVENTS
+       ======================= */
     document.getElementById("resetBtn").addEventListener("click", () => {
       clearTarget();
       openModal();
@@ -461,6 +519,9 @@
       if (e.key === "Enter") document.getElementById("saveBtn").click();
     });
 
+    /* =======================
+       INIT
+       ======================= */
     (function init(){
       const saved = getCookie(COOKIE);
       if (saved && /^\d+$/.test(saved)) {
