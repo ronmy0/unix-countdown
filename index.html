@@ -1,333 +1,336 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Countdown</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Countdown</title>
 
-  <style>
-    :root{
-      --bg: #0b0f14;
-      --panel: rgba(10,14,20,0.68);
-      --panel-border: rgba(255,255,255,0.14);
-      --text: rgba(255,255,255,0.95);
-      --muted: rgba(255,255,255,0.65);
-      --accent: #ffffff;
-      --shadow: 0 18px 60px rgba(0,0,0,0.55);
-      --radius: 22px;
-    }
+    <style>
+        :root{
+            --bg: #0b0f14;
+            --panel: rgba(10,14,20,0.68);
+            --panel-border: rgba(255,255,255,0.14);
+            --text: rgba(255,255,255,0.95);
+            --muted: rgba(255,255,255,0.65);
+            --accent: #ffffff;
+            --shadow: 0 18px 60px rgba(0,0,0,0.55);
+            --radius: 22px;
+        }
 
-    *{ box-sizing:border-box; }
-    html, body { height: 100%; margin: 0; }
+        *{ box-sizing:border-box; }
+        html, body { height: 100%; margin: 0; }
 
-    body{
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-      background: var(--bg);
-      color: var(--text);
-      overflow: hidden;
-    }
+        body{
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+            background: var(--bg);
+            color: var(--text);
+            overflow: hidden;
+        }
 
-    /* Background image — no darkening */
-    .bg{
-      position: fixed;
-      inset: 0;
-      background: var(--bg-img, none);
-      background-size: cover;
-      background-position: center;
-    }
+        /* Background image — no darkening */
+        .bg{
+            position: fixed;
+            inset: 0;
+            background: var(--bg-img, none);
+            background-size: cover;
+            background-position: center;
+        }
 
-    /* Center content with safe-area padding for notched phones */
-    .wrap{
-      position: relative;
-      min-height: 100%;
-      display: grid;
-      place-items: center;
-      padding:
-        calc(18px + env(safe-area-inset-top))
-        calc(18px + env(safe-area-inset-right))
-        calc(28px + env(safe-area-inset-bottom))
-        calc(18px + env(safe-area-inset-left));
-    }
+        /* Center content with safe-area padding for notched phones */
+        .wrap{
+            position: relative;
+            min-height: 100%;
+            display: grid;
+            place-items: center;
+            padding:
+                    calc(18px + env(safe-area-inset-top))
+                    calc(18px + env(safe-area-inset-right))
+                    calc(28px + env(safe-area-inset-bottom))
+                    calc(18px + env(safe-area-inset-left));
+        }
 
-    .card{
-      width: min(1100px, 96vw);
-      border-radius: var(--radius);
-      border: 1px solid var(--panel-border);
-      background: var(--panel);
-      box-shadow: var(--shadow);
-      padding: 22px 22px 18px;
-      backdrop-filter: blur(10px);
-    }
+        .card{
+            width: min(1100px, 96vw);
+            border-radius: var(--radius);
+            border: 1px solid var(--panel-border);
+            background: var(--panel);
+            box-shadow: var(--shadow);
+            padding: 22px 22px 18px;
+            backdrop-filter: blur(10px);
+        }
 
-    .topbar{
-      display:flex;
-      justify-content: space-between;
-      align-items:center;
-      gap: 12px;
-      margin-bottom: 14px;
-    }
+        .topbar{
+            display:flex;
+            justify-content: space-between;
+            align-items:center;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
 
-    .title{
-      font-size: 14px;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: var(--muted);
-      user-select: none;
-      white-space: nowrap;
-    }
+        .title{
+            font-size: 14px;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: var(--muted);
+            user-select: none;
+            white-space: nowrap;
+        }
 
-    .btn{
-      border: 1px solid var(--panel-border);
-      background: rgba(255,255,255,0.10);
-      color: var(--text);
-      border-radius: 14px;
-      padding: 10px 14px;
-      font-weight: 800;
-      font-size: 14px;
-      cursor: pointer;
-      transition: transform 120ms ease, background 120ms ease;
-      white-space: nowrap;
-    }
-    .btn:hover{ background: rgba(255,255,255,0.16); transform: translateY(-1px); }
-    .btn:active{ transform: translateY(0); }
+        .btn{
+            border: 1px solid var(--panel-border);
+            background: rgba(255,255,255,0.10);
+            color: var(--text);
+            border-radius: 14px;
+            padding: 10px 14px;
+            font-weight: 800;
+            font-size: 14px;
+            cursor: pointer;
+            transition: transform 120ms ease, background 120ms ease;
+            white-space: nowrap;
+        }
+        .btn:hover{ background: rgba(255,255,255,0.16); transform: translateY(-1px); }
+        .btn:active{ transform: translateY(0); }
 
-    /* Countdown: vertical by default (phones) */
-    .countdown{
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      align-items: stretch;
-    }
+        /* Countdown: vertical by default (phones) */
+        .countdown{
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            align-items: stretch;
+        }
 
-    /* Each unit row: number left, label right */
-    .unit{
-      display: grid;
-      grid-template-columns: 1fr auto;
-      align-items: baseline;
-      gap: 12px;
-      padding: 18px 18px;
-      border-radius: 18px;
-      border: 1px solid rgba(255,255,255,0.18);
-      background: rgba(0,0,0,0.25);
-    }
+        /* Mobile / vertical layout: centered & stacked */
+        .unit{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 22px 18px;
+            border-radius: 18px;
+            border: 1px solid rgba(255,255,255,0.18);
+            background: rgba(0,0,0,0.25);
+            text-align: center;
+        }
 
-    .num{
-      font-variant-numeric: tabular-nums;
-      font-weight: 900;
-      line-height: 1;
-      color: var(--accent);
-      font-size: clamp(56px, 11vw, 120px);
-      text-shadow: 0 10px 30px rgba(0,0,0,0.45);
-    }
 
-    .label{
-      font-size: 13px;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: var(--muted);
-      justify-self: end;
-      align-self: center;
-      white-space: nowrap;
-    }
+        .num{
+            font-variant-numeric: tabular-nums;
+            font-weight: 900;
+            line-height: 1;
+            color: var(--accent);
+            font-size: clamp(72px, 14vw, 120px);
+            text-shadow: 0 10px 30px rgba(0,0,0,0.45);
+        }
 
-    .meta{
-      margin-top: 14px;
-      text-align: center;
-      font-size: 13px;
-      color: var(--muted);
-      line-height: 1.35;
-      user-select: none;
-      word-break: break-word;
-    }
+        .label{
+            font-size: 13px;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: var(--muted);
+            justify-self: end;
+            align-self: center;
+            white-space: nowrap;
+        }
 
-    /* Desktop/landscape: horizontal centered tiles */
-    @media (min-width: 820px) and (orientation: landscape){
-      .card{ padding: 26px 28px 22px; }
+        .meta{
+            margin-top: 14px;
+            text-align: center;
+            font-size: 13px;
+            color: var(--muted);
+            line-height: 1.35;
+            user-select: none;
+            word-break: break-word;
+        }
 
-      .countdown{
-        flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: center; /* key: stays centered when some units hide */
-        align-items: stretch;
-        gap: 18px;
-      }
+        /* Desktop/landscape: horizontal centered tiles */
+        @media (min-width: 820px) and (orientation: landscape){
+            .card{ padding: 26px 28px 22px; }
 
-      .unit{
-        width: 240px;
-        grid-template-columns: 1fr; /* stack label under number */
-        text-align: center;
-        padding: 26px 18px 22px;
-      }
+            .countdown{
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: center; /* key: stays centered when some units hide */
+                align-items: stretch;
+                gap: 18px;
+            }
 
-      .label{
-        justify-self: center;
-        margin-top: 10px;
-      }
+            .unit{
+                width: 240px;
+                grid-template-columns: 1fr; /* stack label under number */
+                text-align: center;
+                padding: 26px 18px 22px;
+            }
 
-      .num{
-        font-size: clamp(78px, 6.2vw, 140px);
-      }
-    }
+            .label{
+                justify-self: center;
+                margin-top: 10px;
+            }
 
-    /* Modal */
-    .modal{
-      position: fixed;
-      inset: 0;
-      display: none;
-      place-items: center;
-      padding: 18px;
-      background: rgba(0,0,0,0.78);
-      z-index: 10;
-    }
-    .modal.open{ display: grid; }
+            .num{
+                font-size: clamp(78px, 6.2vw, 140px);
+            }
+        }
 
-    .modalCard{
-      width: min(560px, 95vw);
-      border-radius: var(--radius);
-      background: rgba(15,20,27,0.96);
-      border: 1px solid var(--panel-border);
-      box-shadow: var(--shadow);
-      padding: 18px;
-    }
+        /* Modal */
+        .modal{
+            position: fixed;
+            inset: 0;
+            display: none;
+            place-items: center;
+            padding: 18px;
+            background: rgba(0,0,0,0.78);
+            z-index: 10;
+        }
+        .modal.open{ display: grid; }
 
-    .modalTitle{
-      font-size: 18px;
-      font-weight: 900;
-      margin-bottom: 8px;
-      letter-spacing: 0.01em;
-    }
+        .modalCard{
+            width: min(560px, 95vw);
+            border-radius: var(--radius);
+            background: rgba(15,20,27,0.96);
+            border: 1px solid var(--panel-border);
+            box-shadow: var(--shadow);
+            padding: 18px;
+        }
 
-    .modalHint{
-      font-size: 14px;
-      color: var(--muted);
-      margin-bottom: 12px;
-      line-height: 1.4;
-    }
+        .modalTitle{
+            font-size: 18px;
+            font-weight: 900;
+            margin-bottom: 8px;
+            letter-spacing: 0.01em;
+        }
 
-    .input{
-      width: 100%;
-      padding: 14px 14px;
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,0.20);
-      background: rgba(0,0,0,0.42);
-      color: var(--text);
-      font-size: 16px;
-      outline: none;
-    }
-    .input:focus{
-      border-color: rgba(255,255,255,0.34);
-      background: rgba(0,0,0,0.50);
-    }
+        .modalHint{
+            font-size: 14px;
+            color: var(--muted);
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
 
-    .error{
-      margin-top: 8px;
-      min-height: 18px;
-      color: #ffb3b3;
-      font-size: 14px;
-    }
+        .input{
+            width: 100%;
+            padding: 14px 14px;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.20);
+            background: rgba(0,0,0,0.42);
+            color: var(--text);
+            font-size: 16px;
+            outline: none;
+        }
+        .input:focus{
+            border-color: rgba(255,255,255,0.34);
+            background: rgba(0,0,0,0.50);
+        }
 
-    .modalActions{
-      display:flex;
-      justify-content: space-between;
-      align-items:center;
-      gap: 10px;
-      margin-top: 14px;
-      flex-wrap: wrap;
-    }
+        .error{
+            margin-top: 8px;
+            min-height: 18px;
+            color: #ffb3b3;
+            font-size: 14px;
+        }
 
-    /* Credit box with auto-hide */
-    .credit{
-      position: fixed;
-      left: calc(14px + env(safe-area-inset-left));
-      bottom: calc(14px + env(safe-area-inset-bottom));
-      padding: 10px 14px;
-      border-radius: 14px;
-      background: rgba(0,0,0,0.45);
-      border: 1px solid rgba(255,255,255,0.20);
-      font-size: 13px;
-      z-index: 5;
-      transition: opacity 400ms ease, transform 400ms ease;
-      opacity: 1;
-      transform: translateY(0);
-      max-width: min(92vw, 520px);
-    }
-    .credit.hidden{
-      opacity: 0;
-      transform: translateY(8px);
-      pointer-events: none;
-    }
-    .credit a{
-      color: white;
-      text-decoration: none;
-      border-bottom: 1px dashed rgba(255,255,255,0.5);
-    }
+        .modalActions{
+            display:flex;
+            justify-content: space-between;
+            align-items:center;
+            gap: 10px;
+            margin-top: 14px;
+            flex-wrap: wrap;
+        }
 
-    /* Better spacing on very small screens */
-    @media (max-width: 380px){
-      .unit{ padding: 16px 14px; }
-      .label{ font-size: 12px; letter-spacing: 0.18em; }
-      .btn{ padding: 9px 12px; }
-    }
-  </style>
+        /* Credit box with auto-hide */
+        .credit{
+            position: fixed;
+            left: calc(14px + env(safe-area-inset-left));
+            bottom: calc(14px + env(safe-area-inset-bottom));
+            padding: 10px 14px;
+            border-radius: 14px;
+            background: rgba(0,0,0,0.45);
+            border: 1px solid rgba(255,255,255,0.20);
+            font-size: 13px;
+            z-index: 5;
+            transition: opacity 400ms ease, transform 400ms ease;
+            opacity: 1;
+            transform: translateY(0);
+            max-width: min(92vw, 520px);
+        }
+        .credit.hidden{
+            opacity: 0;
+            transform: translateY(8px);
+            pointer-events: none;
+        }
+        .credit a{
+            color: white;
+            text-decoration: none;
+            border-bottom: 1px dashed rgba(255,255,255,0.5);
+        }
+
+        /* Better spacing on very small screens */
+        @media (max-width: 380px){
+            .unit{ padding: 16px 14px; }
+            .label{ font-size: 12px; letter-spacing: 0.18em; }
+            .btn{ padding: 9px 12px; }
+        }
+    </style>
 </head>
 
 <body>
-  <div class="bg" id="bg"></div>
+<div class="bg" id="bg"></div>
 
-  <div class="wrap">
+<div class="wrap">
     <div class="card">
-      <div class="topbar">
-        <div class="title">Countdown</div>
-        <button class="btn" id="resetBtn" type="button">Reset</button>
-      </div>
-
-      <div class="countdown" aria-live="polite">
-        <div class="unit" id="uDays">
-          <div class="num" id="days">0</div>
-          <div class="label">Days</div>
+        <div class="topbar">
+            <div class="title">Countdown</div>
+            <button class="btn" id="resetBtn" type="button">Reset</button>
         </div>
 
-        <div class="unit" id="uHours">
-          <div class="num" id="hours">0</div>
-          <div class="label">Hours</div>
+        <div class="countdown" aria-live="polite">
+            <div class="unit" id="uDays">
+                <div class="num" id="days">0</div>
+                <div class="label">Days</div>
+            </div>
+
+            <div class="unit" id="uHours">
+                <div class="num" id="hours">0</div>
+                <div class="label">Hours</div>
+            </div>
+
+            <div class="unit" id="uMinutes">
+                <div class="num" id="minutes">0</div>
+                <div class="label">Minutes</div>
+            </div>
+
+            <div class="unit" id="uSeconds">
+                <div class="num" id="seconds">0</div>
+                <div class="label">Seconds</div>
+            </div>
         </div>
 
-        <div class="unit" id="uMinutes">
-          <div class="num" id="minutes">0</div>
-          <div class="label">Minutes</div>
-        </div>
-
-        <div class="unit" id="uSeconds">
-          <div class="num" id="seconds">0</div>
-          <div class="label">Seconds</div>
-        </div>
-      </div>
-
-      <div class="meta" id="meta"></div>
+        <div class="meta" id="meta"></div>
     </div>
-  </div>
+</div>
 
-  <div class="modal" id="modal" aria-modal="true" role="dialog">
+<div class="modal" id="modal" aria-modal="true" role="dialog">
     <div class="modalCard">
-      <div class="modalTitle">Set Unix Timestamp</div>
-      <div class="modalHint" id="hint">Enter a Unix timestamp in <b>seconds</b>.</div>
+        <div class="modalTitle">Set Unix Timestamp</div>
+        <div class="modalHint" id="hint">Enter a Unix timestamp in <b>seconds</b>.</div>
 
-      <input class="input" id="unixInput" inputmode="numeric" placeholder="e.g. 1767225600" />
-      <div class="error" id="error"></div>
+        <input class="input" id="unixInput" inputmode="numeric" placeholder="e.g. 1767225600" />
+        <div class="error" id="error"></div>
 
-      <div class="modalActions">
-        <button class="btn" id="nowPlusBtn" type="button">Now + 1h</button>
-        <button class="btn" id="saveBtn" type="button">Start</button>
-      </div>
+        <div class="modalActions">
+            <button class="btn" id="nowPlusBtn" type="button">Now + 1h</button>
+            <button class="btn" id="saveBtn" type="button">Start</button>
+        </div>
     </div>
-  </div>
+</div>
 
-  <div class="credit" id="credit">
+<div class="credit" id="credit">
     Image:
     <a id="creditLink" target="_blank" rel="noopener noreferrer"></a>
-  </div>
+</div>
 
-  <script>
+<script>
     /* =======================
        CONFIG (EDIT THESE)
        ======================= */
@@ -350,7 +353,7 @@
 
     // Auto-hide credit after 10 seconds
     window.addEventListener("load", () => {
-      setTimeout(() => credit.classList.add("hidden"), 10000);
+        setTimeout(() => credit.classList.add("hidden"), 10000);
     });
 
     const modal = document.getElementById("modal");
@@ -373,34 +376,34 @@
        COOKIE HELPERS
        ======================= */
     function setCookie(name, value, days=365) {
-      const maxAge = days * 24 * 60 * 60;
-      document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(value)}; Max-Age=${maxAge}; Path=/; SameSite=Lax`;
+        const maxAge = days * 24 * 60 * 60;
+        document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(value)}; Max-Age=${maxAge}; Path=/; SameSite=Lax`;
     }
     function getCookie(name) {
-      const n = encodeURIComponent(name) + "=";
-      const parts = document.cookie.split(";").map(s => s.trim());
-      for (const p of parts) {
-        if (p.startsWith(n)) return decodeURIComponent(p.substring(n.length));
-      }
-      return null;
+        const n = encodeURIComponent(name) + "=";
+        const parts = document.cookie.split(";").map(s => s.trim());
+        for (const p of parts) {
+            if (p.startsWith(n)) return decodeURIComponent(p.substring(n.length));
+        }
+        return null;
     }
     function deleteCookie(name) {
-      document.cookie = `${encodeURIComponent(name)}=; Max-Age=0; Path=/; SameSite=Lax`;
+        document.cookie = `${encodeURIComponent(name)}=; Max-Age=0; Path=/; SameSite=Lax`;
     }
 
     /* =======================
        INPUT PARSING
        ======================= */
     function parseUnixSeconds(raw) {
-      const s = (raw || "").trim();
-      if (!/^\d+$/.test(s)) return null;
+        const s = (raw || "").trim();
+        if (!/^\d+$/.test(s)) return null;
 
-      const n = Number(s);
-      if (!Number.isFinite(n)) return null;
+        const n = Number(s);
+        if (!Number.isFinite(n)) return null;
 
-      // If user pasted ms (13+ digits), auto-convert
-      if (s.length >= 13) return Math.floor(n / 1000);
-      return Math.floor(n);
+        // If user pasted ms (13+ digits), auto-convert
+        if (s.length >= 13) return Math.floor(n / 1000);
+        return Math.floor(n);
     }
 
     /* =======================
@@ -410,132 +413,132 @@
     let timerHandle = null;
 
     function openModal(){
-      error.textContent = "";
-      const now = Math.floor(Date.now() / 1000);
-      const example = now + 24*60*60;
-      hint.innerHTML =
-        `Enter a Unix timestamp in <b>seconds</b>. Example: <b>${example}</b>.<br/>` +
-        `If you paste milliseconds (13 digits), it auto-converts.`;
-      modal.classList.add("open");
-      setTimeout(() => input.focus(), 0);
+        error.textContent = "";
+        const now = Math.floor(Date.now() / 1000);
+        const example = now + 24*60*60;
+        hint.innerHTML =
+            `Enter a Unix timestamp in <b>seconds</b>. Example: <b>${example}</b>.<br/>` +
+            `If you paste milliseconds (13 digits), it auto-converts.`;
+        modal.classList.add("open");
+        setTimeout(() => input.focus(), 0);
     }
 
     function closeModal(){
-      modal.classList.remove("open");
+        modal.classList.remove("open");
     }
 
     function clearTarget(){
-      targetUnix = null;
-      deleteCookie(COOKIE);
+        targetUnix = null;
+        deleteCookie(COOKIE);
     }
 
     function setTarget(unixSeconds){
-      targetUnix = unixSeconds;
-      setCookie(COOKIE, String(unixSeconds));
+        targetUnix = unixSeconds;
+        setCookie(COOKIE, String(unixSeconds));
     }
 
     function updateDisplay(diffSeconds){
-      if (diffSeconds <= 0){
-        uDays.style.display = "none";
-        uHours.style.display = "none";
-        uMinutes.style.display = "none";
+        if (diffSeconds <= 0){
+            uDays.style.display = "none";
+            uHours.style.display = "none";
+            uMinutes.style.display = "none";
+            uSeconds.style.display = "";
+
+            daysEl.textContent = "0";
+            hoursEl.textContent = "0";
+            minutesEl.textContent = "0";
+            secondsEl.textContent = "0";
+
+            metaEl.textContent = "Time reached.";
+            return;
+        }
+
+        const days = Math.floor(diffSeconds / 86400);
+        diffSeconds -= days * 86400;
+
+        const hours = Math.floor(diffSeconds / 3600);
+        diffSeconds -= hours * 3600;
+
+        const minutes = Math.floor(diffSeconds / 60);
+        const seconds = diffSeconds - minutes * 60;
+
+        // Hide leading zero units (flex layout will re-center automatically)
+        uDays.style.display    = (days > 0) ? "" : "none";
+        uHours.style.display   = (days > 0 || hours > 0) ? "" : "none";
+        uMinutes.style.display = (days > 0 || hours > 0 || minutes > 0) ? "" : "none";
         uSeconds.style.display = "";
 
-        daysEl.textContent = "0";
-        hoursEl.textContent = "0";
-        minutesEl.textContent = "0";
-        secondsEl.textContent = "0";
+        daysEl.textContent = String(days);
+        hoursEl.textContent = String(hours);
+        minutesEl.textContent = String(minutes);
+        secondsEl.textContent = String(seconds);
 
-        metaEl.textContent = "Time reached.";
-        return;
-      }
-
-      const days = Math.floor(diffSeconds / 86400);
-      diffSeconds -= days * 86400;
-
-      const hours = Math.floor(diffSeconds / 3600);
-      diffSeconds -= hours * 3600;
-
-      const minutes = Math.floor(diffSeconds / 60);
-      const seconds = diffSeconds - minutes * 60;
-
-      // Hide leading zero units (flex layout will re-center automatically)
-      uDays.style.display    = (days > 0) ? "" : "none";
-      uHours.style.display   = (days > 0 || hours > 0) ? "" : "none";
-      uMinutes.style.display = (days > 0 || hours > 0 || minutes > 0) ? "" : "none";
-      uSeconds.style.display = "";
-
-      daysEl.textContent = String(days);
-      hoursEl.textContent = String(hours);
-      minutesEl.textContent = String(minutes);
-      secondsEl.textContent = String(seconds);
-
-      const targetDate = new Date(targetUnix * 1000);
-      metaEl.textContent = `Target: ${targetDate.toLocaleString()} • Unix: ${targetUnix}`;
+        const targetDate = new Date(targetUnix * 1000);
+        metaEl.textContent = `Target: ${targetDate.toLocaleString()} • Unix: ${targetUnix}`;
     }
 
     function tick(){
-      const now = Math.floor(Date.now() / 1000);
-      updateDisplay(targetUnix - now);
+        const now = Math.floor(Date.now() / 1000);
+        updateDisplay(targetUnix - now);
     }
 
     function startCountdown(){
-      if (timerHandle) clearInterval(timerHandle);
-      tick();
-      timerHandle = setInterval(tick, 250);
+        if (timerHandle) clearInterval(timerHandle);
+        tick();
+        timerHandle = setInterval(tick, 250);
     }
 
     /* =======================
        EVENTS
        ======================= */
     document.getElementById("resetBtn").addEventListener("click", () => {
-      clearTarget();
-      openModal();
+        clearTarget();
+        openModal();
     });
 
     document.getElementById("saveBtn").addEventListener("click", () => {
-      const parsed = parseUnixSeconds(input.value);
-      if (parsed == null){
-        error.textContent = "Please enter a valid Unix timestamp (numbers only).";
-        return;
-      }
-      const now = Math.floor(Date.now() / 1000);
-      if (parsed <= now){
-        error.textContent = "That time is not in the future. Enter a future Unix timestamp.";
-        return;
-      }
-      setTarget(parsed);
-      closeModal();
-      startCountdown();
+        const parsed = parseUnixSeconds(input.value);
+        if (parsed == null){
+            error.textContent = "Please enter a valid Unix timestamp (numbers only).";
+            return;
+        }
+        const now = Math.floor(Date.now() / 1000);
+        if (parsed <= now){
+            error.textContent = "That time is not in the future. Enter a future Unix timestamp.";
+            return;
+        }
+        setTarget(parsed);
+        closeModal();
+        startCountdown();
     });
 
     document.getElementById("nowPlusBtn").addEventListener("click", () => {
-      const now = Math.floor(Date.now() / 1000);
-      input.value = String(now + 3600);
-      input.focus();
+        const now = Math.floor(Date.now() / 1000);
+        input.value = String(now + 3600);
+        input.focus();
     });
 
     input.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") document.getElementById("saveBtn").click();
+        if (e.key === "Enter") document.getElementById("saveBtn").click();
     });
 
     /* =======================
        INIT
        ======================= */
     (function init(){
-      const saved = getCookie(COOKIE);
-      if (saved && /^\d+$/.test(saved)) {
-        targetUnix = Number(saved);
-      }
+        const saved = getCookie(COOKIE);
+        if (saved && /^\d+$/.test(saved)) {
+            targetUnix = Number(saved);
+        }
 
-      const now = Math.floor(Date.now() / 1000);
-      if (!targetUnix || !Number.isFinite(targetUnix) || targetUnix <= now){
-        clearTarget();
-        openModal();
-      } else {
-        startCountdown();
-      }
+        const now = Math.floor(Date.now() / 1000);
+        if (!targetUnix || !Number.isFinite(targetUnix) || targetUnix <= now){
+            clearTarget();
+            openModal();
+        } else {
+            startCountdown();
+        }
     })();
-  </script>
+</script>
 </body>
 </html>
