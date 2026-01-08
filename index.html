@@ -26,7 +26,6 @@
       overflow: hidden;
     }
 
-    /* Background image layer (optional) */
     .bg{
       position: fixed;
       inset: 0;
@@ -39,7 +38,6 @@
       transform: scale(1.02);
     }
 
-    /* Subtle vignette */
     .vignette{
       position: fixed;
       inset: 0;
@@ -98,11 +96,8 @@
       border-color: rgba(255,255,255,0.22);
       transform: translateY(-1px);
     }
-    .btn:active{
-      transform: translateY(0px);
-    }
+    .btn:active{ transform: translateY(0px); }
 
-    /* Countdown layout */
     .countdown{
       display: flex;
       align-items: stretch;
@@ -185,16 +180,6 @@
       color: var(--muted);
       line-height: 1.5;
     }
-    .row{
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-    @media (min-width: 560px){
-      .row.two{ grid-template-columns: 1fr 1fr; }
-    }
-
     .field label{
       display: block;
       font-size: 12px;
@@ -217,7 +202,6 @@
       border-color: rgba(255,255,255,0.28);
       background: rgba(0,0,0,0.34);
     }
-
     .actions{
       display: flex;
       gap: 10px;
@@ -225,7 +209,6 @@
       align-items: center;
       margin-top: 8px;
     }
-
     .error{
       color: #ffb4b4;
       font-size: 13px;
@@ -233,7 +216,7 @@
       min-height: 18px;
     }
 
-    /* Image credit box */
+    /* Image credit box (display-only) */
     .credit{
       position: fixed;
       left: 14px;
@@ -268,50 +251,6 @@
       white-space: nowrap;
     }
     .creditLink:hover{ border-bottom-color: rgba(255,255,255,0.70); }
-
-    .creditEdit{
-      margin-top: 10px;
-      display: grid;
-      gap: 8px;
-    }
-    .creditEdit .smallRow{
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 8px;
-    }
-    @media (min-width: 560px){
-      .creditEdit .smallRow{
-        grid-template-columns: 1fr 1fr;
-      }
-    }
-    .credit input{
-      padding: 10px 10px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.14);
-      background: rgba(0,0,0,0.25);
-      color: var(--text);
-      outline: none;
-      font-size: 13px;
-    }
-    .credit input:focus{
-      border-color: rgba(255,255,255,0.28);
-      background: rgba(0,0,0,0.32);
-    }
-    .credit .miniBtn{
-      justify-self: start;
-      padding: 7px 10px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.14);
-      background: rgba(255,255,255,0.06);
-      color: var(--text);
-      cursor: pointer;
-      font-weight: 700;
-      font-size: 12px;
-    }
-    .credit .miniBtn:hover{
-      background: rgba(255,255,255,0.10);
-      border-color: rgba(255,255,255,0.22);
-    }
   </style>
 </head>
 
@@ -322,7 +261,7 @@
   <div class="wrap">
     <div class="card" role="main" aria-live="polite">
       <div class="topbar">
-        <div class="title" id="title">Countdown</div>
+        <div class="title">Countdown</div>
         <button class="btn" id="resetBtn" type="button" title="Clear saved target time">Reset</button>
       </div>
 
@@ -349,7 +288,6 @@
     </div>
   </div>
 
-  <!-- Prompt modal -->
   <div class="modal" id="modal" aria-modal="true" role="dialog">
     <div class="modalCard">
       <div class="modalHeader">
@@ -359,25 +297,12 @@
 
       <p class="modalHint">
         Enter a <b>Unix timestamp in seconds</b> (example: <span id="exampleTs"></span>).<br/>
-        Tip: If you have a milliseconds timestamp, divide by <code>1000</code>.
+        If you paste milliseconds (13 digits), it will auto-convert by dividing by <code>1000</code>.
       </p>
 
-      <div class="row">
-        <div class="field">
-          <label for="unixInput">Unix time (seconds)</label>
-          <input class="input" id="unixInput" inputmode="numeric" placeholder="e.g. 1767225600" />
-        </div>
-      </div>
-
-      <div class="row two">
-        <div class="field">
-          <label for="creditTextInput">Image credit text (optional)</label>
-          <input class="input" id="creditTextInput" placeholder="e.g. NASA - James Webb: Carina Nebula" />
-        </div>
-        <div class="field">
-          <label for="creditUrlInput">Image credit link (optional)</label>
-          <input class="input" id="creditUrlInput" placeholder="e.g. https://images.nasa.gov/..." />
-        </div>
+      <div class="field">
+        <label for="unixInput">Unix time (seconds)</label>
+        <input class="input" id="unixInput" inputmode="numeric" placeholder="e.g. 1767225600" />
       </div>
 
       <div class="error" id="error"></div>
@@ -388,27 +313,18 @@
     </div>
   </div>
 
-  <!-- Bottom-left Image credit -->
   <div class="credit" id="creditBox">
     <div class="creditTitle">Image</div>
-    <a class="creditLink" id="creditLink" href="#" target="_blank" rel="noopener noreferrer" style="display:none;"></a>
-
-    <div class="creditEdit" aria-label="Image credit editor">
-      <div class="smallRow">
-        <input id="creditTextInline" placeholder="Credit text (optional)" />
-        <input id="creditUrlInline" placeholder="Credit link (optional)" />
-      </div>
-      <button class="miniBtn" id="saveCreditBtn" type="button">Save credit</button>
-    </div>
+    <a class="creditLink" id="creditLink" href="#" target="_blank" rel="noopener noreferrer"></a>
   </div>
 
   <script>
     /**********************
-     * Config
+     * CONFIG (edit these)
      **********************/
-    // Put an image file next to index.html and name it here.
-    // Example: "background.jpg" or "bg.webp"
-    const BACKGROUND_IMAGE = "background.jpg"; // <-- change to your filename (or "" to disable)
+    const BACKGROUND_IMAGE = "background.jpg"; // put this file next to index.html
+    const IMAGE_CREDIT_TEXT = "NASA - James Webb: Carina Nebula";
+    const IMAGE_CREDIT_URL  = "https://images.nasa.gov/"; // replace with the exact page if you want
 
     /**********************
      * Cookie helpers
@@ -429,9 +345,6 @@
       document.cookie = `${encodeURIComponent(name)}=; Max-Age=0; Path=/; SameSite=Lax`;
     }
 
-    /**********************
-     * DOM
-     **********************/
     const el = (id) => document.getElementById(id);
 
     const bg = el("bg");
@@ -456,78 +369,37 @@
     const useNowPlusBtn = el("useNowPlusBtn");
 
     const creditLink = el("creditLink");
-    const creditTextInput = el("creditTextInput");
-    const creditUrlInput = el("creditUrlInput");
-    const creditTextInline = el("creditTextInline");
-    const creditUrlInline = el("creditUrlInline");
-    const saveCreditBtn = el("saveCreditBtn");
 
-    /**********************
-     * State
-     **********************/
     const COOKIE_TARGET = "countdown_target_unix";
-    const COOKIE_CREDIT_TEXT = "countdown_credit_text";
-    const COOKIE_CREDIT_URL  = "countdown_credit_url";
-
     let targetUnix = null; // seconds
     let timerHandle = null;
 
     /**********************
-     * Background image
+     * Background + credit
      **********************/
     if (BACKGROUND_IMAGE && BACKGROUND_IMAGE.trim() !== "") {
-      // Use CSS var so the gradient overlay remains on top
       bg.style.setProperty("--bg-img", `url("${BACKGROUND_IMAGE}")`);
     } else {
       bg.style.setProperty("--bg-img", "none");
     }
 
-    /**********************
-     * Credit UI
-     **********************/
-    function sanitizeUrl(url) {
-      // Allow empty, otherwise try to normalize to https:// if no scheme
+    function normalizeUrl(url) {
       const u = (url || "").trim();
       if (!u) return "";
       if (/^https?:\/\//i.test(u)) return u;
       return "https://" + u;
     }
 
-    function renderCredit(text, url) {
-      const t = (text || "").trim();
-      const u = sanitizeUrl(url);
-
-      // keep inline inputs in sync
-      creditTextInline.value = t;
-      creditUrlInline.value = (url || "").trim();
-
-      if (t && u) {
-        creditLink.style.display = "inline-block";
-        creditLink.textContent = t;
+    (function renderCredit(){
+      const u = normalizeUrl(IMAGE_CREDIT_URL);
+      creditLink.textContent = (IMAGE_CREDIT_TEXT || "").trim() || "Image credit";
+      if (u) {
         creditLink.href = u;
-      } else if (t && !u) {
-        // If no URL, show text but not clickable
-        creditLink.style.display = "inline-block";
-        creditLink.textContent = t;
-        creditLink.removeAttribute("href");
       } else {
-        creditLink.style.display = "none";
-        creditLink.textContent = "";
-        creditLink.href = "#";
+        // no link; keep it non-clickable
+        creditLink.removeAttribute("href");
       }
-    }
-
-    function loadCreditFromCookies() {
-      const t = getCookie(COOKIE_CREDIT_TEXT) || "";
-      const u = getCookie(COOKIE_CREDIT_URL) || "";
-      renderCredit(t, u);
-    }
-
-    function saveCreditToCookies(text, url) {
-      setCookie(COOKIE_CREDIT_TEXT, (text || "").trim());
-      setCookie(COOKIE_CREDIT_URL, (url || "").trim());
-      renderCredit(text, url);
-    }
+    })();
 
     /**********************
      * Modal
@@ -535,17 +407,10 @@
     function openModal() {
       modal.classList.add("open");
       errorEl.textContent = "";
-      // Example: now + 24h
       const now = Math.floor(Date.now() / 1000);
-      exampleTs.textContent = String(now + 24*60*60);
-
-      // Pre-fill with cookie credit if any
-      creditTextInput.value = getCookie(COOKIE_CREDIT_TEXT) || "";
-      creditUrlInput.value  = getCookie(COOKIE_CREDIT_URL)  || "";
-
+      exampleTs.textContent = String(now + 24 * 60 * 60);
       setTimeout(() => unixInput.focus(), 0);
     }
-
     function closeModal() {
       modal.classList.remove("open");
     }
@@ -555,19 +420,16 @@
       if (!/^\d+$/.test(s)) return null;
       const n = Number(s);
       if (!Number.isFinite(n)) return null;
-      // Heuristic: if user pasted milliseconds (13 digits), convert
+      // If user pasted ms (13 digits), convert to seconds
       if (s.length >= 13) return Math.floor(n / 1000);
       return Math.floor(n);
     }
 
     /**********************
-     * Countdown logic
+     * Countdown
      **********************/
-    function pad2(n) { return String(n).padStart(2, "0"); }
-
     function updateDisplay(diffSeconds) {
       if (diffSeconds <= 0) {
-        // Time reached
         uDays.style.display = "none";
         uHours.style.display = "none";
         uMinutes.style.display = "none";
@@ -591,7 +453,7 @@
       const minutes = Math.floor(diffSeconds / 60);
       const seconds = diffSeconds - minutes * 60;
 
-      // Hide leading zero units and keep everything centered
+      // Hide leading zero units
       uDays.style.display = (days > 0) ? "" : "none";
       uHours.style.display = (days > 0 || hours > 0) ? "" : "none";
       uMinutes.style.display = (days > 0 || hours > 0 || minutes > 0) ? "" : "none";
@@ -608,18 +470,17 @@
 
     function tick() {
       const now = Math.floor(Date.now() / 1000);
-      const diff = targetUnix - now;
-      updateDisplay(diff);
+      updateDisplay(targetUnix - now);
     }
 
     function startCountdown() {
       if (timerHandle) clearInterval(timerHandle);
       tick();
-      timerHandle = setInterval(tick, 250); // smooth-ish updates; seconds still integer
+      timerHandle = setInterval(tick, 250);
     }
 
     /**********************
-     * Init / Event handlers
+     * Target persistence
      **********************/
     function clearTarget() {
       targetUnix = null;
@@ -631,6 +492,9 @@
       setCookie(COOKIE_TARGET, String(unixSeconds));
     }
 
+    /**********************
+     * Events
+     **********************/
     resetBtn.addEventListener("click", () => {
       clearTarget();
       openModal();
@@ -649,10 +513,6 @@
       }
 
       setTarget(parsed);
-
-      // Save credit from modal (optional)
-      saveCreditToCookies(creditTextInput.value, creditUrlInput.value);
-
       closeModal();
       startCountdown();
     });
@@ -663,25 +523,19 @@
       unixInput.focus();
     });
 
-    // Enter key submits
     unixInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter") saveBtn.click();
     });
 
-    saveCreditBtn.addEventListener("click", () => {
-      saveCreditToCookies(creditTextInline.value, creditUrlInline.value);
-    });
-
-    // Load saved target if present
+    /**********************
+     * Init
+     **********************/
     (function init() {
-      loadCreditFromCookies();
-
       const saved = getCookie(COOKIE_TARGET);
       if (saved && /^\d+$/.test(saved)) {
         targetUnix = Number(saved);
       }
 
-      // If missing or invalid or in the past, prompt
       const now = Math.floor(Date.now() / 1000);
       if (!targetUnix || !Number.isFinite(targetUnix) || targetUnix <= now) {
         clearTarget();
