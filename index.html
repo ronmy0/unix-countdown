@@ -1,0 +1,695 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Countdown</title>
+  <style>
+    :root{
+      --bg: #0b0f14;
+      --panel: rgba(10, 14, 20, 0.72);
+      --panel-border: rgba(255,255,255,0.12);
+      --text: rgba(255,255,255,0.92);
+      --muted: rgba(255,255,255,0.70);
+      --muted2: rgba(255,255,255,0.55);
+      --accent: rgba(255,255,255,0.92);
+      --shadow: 0 10px 30px rgba(0,0,0,0.45);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body{
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    /* Background image layer (optional) */
+    .bg{
+      position: fixed;
+      inset: 0;
+      background:
+        linear-gradient(to bottom, rgba(0,0,0,0.55), rgba(0,0,0,0.70)),
+        var(--bg-img, none);
+      background-size: cover;
+      background-position: center;
+      filter: saturate(1.05) contrast(1.02);
+      transform: scale(1.02);
+    }
+
+    /* Subtle vignette */
+    .vignette{
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at center, rgba(0,0,0,0) 0%, rgba(0,0,0,0.55) 75%, rgba(0,0,0,0.85) 100%);
+      pointer-events: none;
+    }
+
+    .wrap{
+      position: relative;
+      height: 100%;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .card{
+      width: min(940px, 96vw);
+      border: 1px solid var(--panel-border);
+      background: var(--panel);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      padding: 22px 22px 18px;
+    }
+
+    .topbar{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .title{
+      font-size: 14px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      user-select: none;
+    }
+
+    .btn{
+      appearance: none;
+      border: 1px solid var(--panel-border);
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 8px 12px;
+      cursor: pointer;
+      transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+      font-weight: 600;
+      font-size: 13px;
+    }
+    .btn:hover{
+      background: rgba(255,255,255,0.10);
+      border-color: rgba(255,255,255,0.22);
+      transform: translateY(-1px);
+    }
+    .btn:active{
+      transform: translateY(0px);
+    }
+
+    /* Countdown layout */
+    .countdown{
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+      gap: 14px;
+      padding: 10px 6px 6px;
+      flex-wrap: wrap;
+    }
+
+    .unit{
+      min-width: 150px;
+      padding: 18px 16px 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.22);
+      text-align: center;
+    }
+
+    .num{
+      font-variant-numeric: tabular-nums;
+      font-size: clamp(44px, 6vw, 78px);
+      font-weight: 800;
+      line-height: 1.05;
+      color: var(--accent);
+      text-shadow: 0 6px 24px rgba(0,0,0,0.35);
+    }
+
+    .label{
+      margin-top: 8px;
+      font-size: 12px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted2);
+    }
+
+    .meta{
+      margin-top: 10px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--muted2);
+      user-select: none;
+    }
+
+    /* Prompt modal */
+    .modal{
+      position: fixed;
+      inset: 0;
+      display: none;
+      place-items: center;
+      padding: 24px;
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(6px);
+      z-index: 10;
+    }
+    .modal.open{ display: grid; }
+
+    .modalCard{
+      width: min(640px, 96vw);
+      border-radius: var(--radius);
+      border: 1px solid var(--panel-border);
+      background: rgba(10,14,20,0.86);
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+    .modalHeader{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .modalTitle{
+      font-weight: 800;
+      font-size: 16px;
+      letter-spacing: 0.02em;
+    }
+    .modalHint{
+      margin: 0 0 12px;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .row{
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    @media (min-width: 560px){
+      .row.two{ grid-template-columns: 1fr 1fr; }
+    }
+
+    .field label{
+      display: block;
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted2);
+      margin: 0 0 6px;
+    }
+    .input{
+      width: 100%;
+      padding: 12px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(0,0,0,0.28);
+      color: var(--text);
+      outline: none;
+      font-size: 14px;
+    }
+    .input:focus{
+      border-color: rgba(255,255,255,0.28);
+      background: rgba(0,0,0,0.34);
+    }
+
+    .actions{
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      align-items: center;
+      margin-top: 8px;
+    }
+
+    .error{
+      color: #ffb4b4;
+      font-size: 13px;
+      margin-top: 6px;
+      min-height: 18px;
+    }
+
+    /* Image credit box */
+    .credit{
+      position: fixed;
+      left: 14px;
+      bottom: 14px;
+      width: min(360px, calc(100vw - 28px));
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(10,14,20,0.72);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.35);
+      padding: 10px 10px 10px;
+      z-index: 5;
+    }
+    .creditTitle{
+      font-size: 12px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted2);
+      margin-bottom: 6px;
+      user-select: none;
+    }
+    .creditLink{
+      display: inline-block;
+      color: var(--text);
+      font-size: 13px;
+      text-decoration: none;
+      border-bottom: 1px dashed rgba(255,255,255,0.35);
+      padding-bottom: 1px;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .creditLink:hover{ border-bottom-color: rgba(255,255,255,0.70); }
+
+    .creditEdit{
+      margin-top: 10px;
+      display: grid;
+      gap: 8px;
+    }
+    .creditEdit .smallRow{
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+    @media (min-width: 560px){
+      .creditEdit .smallRow{
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    .credit input{
+      padding: 10px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(0,0,0,0.25);
+      color: var(--text);
+      outline: none;
+      font-size: 13px;
+    }
+    .credit input:focus{
+      border-color: rgba(255,255,255,0.28);
+      background: rgba(0,0,0,0.32);
+    }
+    .credit .miniBtn{
+      justify-self: start;
+      padding: 7px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 12px;
+    }
+    .credit .miniBtn:hover{
+      background: rgba(255,255,255,0.10);
+      border-color: rgba(255,255,255,0.22);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="bg" id="bg"></div>
+  <div class="vignette"></div>
+
+  <div class="wrap">
+    <div class="card" role="main" aria-live="polite">
+      <div class="topbar">
+        <div class="title" id="title">Countdown</div>
+        <button class="btn" id="resetBtn" type="button" title="Clear saved target time">Reset</button>
+      </div>
+
+      <div class="countdown" id="countdown">
+        <div class="unit" id="uDays">
+          <div class="num" id="days">0</div>
+          <div class="label">Days</div>
+        </div>
+        <div class="unit" id="uHours">
+          <div class="num" id="hours">0</div>
+          <div class="label">Hours</div>
+        </div>
+        <div class="unit" id="uMinutes">
+          <div class="num" id="minutes">0</div>
+          <div class="label">Minutes</div>
+        </div>
+        <div class="unit" id="uSeconds">
+          <div class="num" id="seconds">0</div>
+          <div class="label">Seconds</div>
+        </div>
+      </div>
+
+      <div class="meta" id="meta"></div>
+    </div>
+  </div>
+
+  <!-- Prompt modal -->
+  <div class="modal" id="modal" aria-modal="true" role="dialog">
+    <div class="modalCard">
+      <div class="modalHeader">
+        <div class="modalTitle">Set target Unix time</div>
+        <button class="btn" id="useNowPlusBtn" type="button" title="Fill example: now + 1 hour">Now + 1h</button>
+      </div>
+
+      <p class="modalHint">
+        Enter a <b>Unix timestamp in seconds</b> (example: <span id="exampleTs"></span>).<br/>
+        Tip: If you have a milliseconds timestamp, divide by <code>1000</code>.
+      </p>
+
+      <div class="row">
+        <div class="field">
+          <label for="unixInput">Unix time (seconds)</label>
+          <input class="input" id="unixInput" inputmode="numeric" placeholder="e.g. 1767225600" />
+        </div>
+      </div>
+
+      <div class="row two">
+        <div class="field">
+          <label for="creditTextInput">Image credit text (optional)</label>
+          <input class="input" id="creditTextInput" placeholder="e.g. NASA - James Webb: Carina Nebula" />
+        </div>
+        <div class="field">
+          <label for="creditUrlInput">Image credit link (optional)</label>
+          <input class="input" id="creditUrlInput" placeholder="e.g. https://images.nasa.gov/..." />
+        </div>
+      </div>
+
+      <div class="error" id="error"></div>
+
+      <div class="actions">
+        <button class="btn" id="saveBtn" type="button">Save & Start</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom-left Image credit -->
+  <div class="credit" id="creditBox">
+    <div class="creditTitle">Image</div>
+    <a class="creditLink" id="creditLink" href="#" target="_blank" rel="noopener noreferrer" style="display:none;"></a>
+
+    <div class="creditEdit" aria-label="Image credit editor">
+      <div class="smallRow">
+        <input id="creditTextInline" placeholder="Credit text (optional)" />
+        <input id="creditUrlInline" placeholder="Credit link (optional)" />
+      </div>
+      <button class="miniBtn" id="saveCreditBtn" type="button">Save credit</button>
+    </div>
+  </div>
+
+  <script>
+    /**********************
+     * Config
+     **********************/
+    // Put an image file next to index.html and name it here.
+    // Example: "background.jpg" or "bg.webp"
+    const BACKGROUND_IMAGE = "background.jpg"; // <-- change to your filename (or "" to disable)
+
+    /**********************
+     * Cookie helpers
+     **********************/
+    function setCookie(name, value, days=365) {
+      const maxAge = days * 24 * 60 * 60;
+      document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(value)}; Max-Age=${maxAge}; Path=/; SameSite=Lax`;
+    }
+    function getCookie(name) {
+      const n = encodeURIComponent(name) + "=";
+      const parts = document.cookie.split(";").map(s => s.trim());
+      for (const p of parts) {
+        if (p.startsWith(n)) return decodeURIComponent(p.substring(n.length));
+      }
+      return null;
+    }
+    function deleteCookie(name) {
+      document.cookie = `${encodeURIComponent(name)}=; Max-Age=0; Path=/; SameSite=Lax`;
+    }
+
+    /**********************
+     * DOM
+     **********************/
+    const el = (id) => document.getElementById(id);
+
+    const bg = el("bg");
+    const modal = el("modal");
+    const unixInput = el("unixInput");
+    const exampleTs = el("exampleTs");
+    const errorEl = el("error");
+
+    const daysEl = el("days");
+    const hoursEl = el("hours");
+    const minutesEl = el("minutes");
+    const secondsEl = el("seconds");
+
+    const uDays = el("uDays");
+    const uHours = el("uHours");
+    const uMinutes = el("uMinutes");
+    const uSeconds = el("uSeconds");
+
+    const meta = el("meta");
+    const resetBtn = el("resetBtn");
+    const saveBtn = el("saveBtn");
+    const useNowPlusBtn = el("useNowPlusBtn");
+
+    const creditLink = el("creditLink");
+    const creditTextInput = el("creditTextInput");
+    const creditUrlInput = el("creditUrlInput");
+    const creditTextInline = el("creditTextInline");
+    const creditUrlInline = el("creditUrlInline");
+    const saveCreditBtn = el("saveCreditBtn");
+
+    /**********************
+     * State
+     **********************/
+    const COOKIE_TARGET = "countdown_target_unix";
+    const COOKIE_CREDIT_TEXT = "countdown_credit_text";
+    const COOKIE_CREDIT_URL  = "countdown_credit_url";
+
+    let targetUnix = null; // seconds
+    let timerHandle = null;
+
+    /**********************
+     * Background image
+     **********************/
+    if (BACKGROUND_IMAGE && BACKGROUND_IMAGE.trim() !== "") {
+      // Use CSS var so the gradient overlay remains on top
+      bg.style.setProperty("--bg-img", `url("${BACKGROUND_IMAGE}")`);
+    } else {
+      bg.style.setProperty("--bg-img", "none");
+    }
+
+    /**********************
+     * Credit UI
+     **********************/
+    function sanitizeUrl(url) {
+      // Allow empty, otherwise try to normalize to https:// if no scheme
+      const u = (url || "").trim();
+      if (!u) return "";
+      if (/^https?:\/\//i.test(u)) return u;
+      return "https://" + u;
+    }
+
+    function renderCredit(text, url) {
+      const t = (text || "").trim();
+      const u = sanitizeUrl(url);
+
+      // keep inline inputs in sync
+      creditTextInline.value = t;
+      creditUrlInline.value = (url || "").trim();
+
+      if (t && u) {
+        creditLink.style.display = "inline-block";
+        creditLink.textContent = t;
+        creditLink.href = u;
+      } else if (t && !u) {
+        // If no URL, show text but not clickable
+        creditLink.style.display = "inline-block";
+        creditLink.textContent = t;
+        creditLink.removeAttribute("href");
+      } else {
+        creditLink.style.display = "none";
+        creditLink.textContent = "";
+        creditLink.href = "#";
+      }
+    }
+
+    function loadCreditFromCookies() {
+      const t = getCookie(COOKIE_CREDIT_TEXT) || "";
+      const u = getCookie(COOKIE_CREDIT_URL) || "";
+      renderCredit(t, u);
+    }
+
+    function saveCreditToCookies(text, url) {
+      setCookie(COOKIE_CREDIT_TEXT, (text || "").trim());
+      setCookie(COOKIE_CREDIT_URL, (url || "").trim());
+      renderCredit(text, url);
+    }
+
+    /**********************
+     * Modal
+     **********************/
+    function openModal() {
+      modal.classList.add("open");
+      errorEl.textContent = "";
+      // Example: now + 24h
+      const now = Math.floor(Date.now() / 1000);
+      exampleTs.textContent = String(now + 24*60*60);
+
+      // Pre-fill with cookie credit if any
+      creditTextInput.value = getCookie(COOKIE_CREDIT_TEXT) || "";
+      creditUrlInput.value  = getCookie(COOKIE_CREDIT_URL)  || "";
+
+      setTimeout(() => unixInput.focus(), 0);
+    }
+
+    function closeModal() {
+      modal.classList.remove("open");
+    }
+
+    function parseUnixSeconds(raw) {
+      const s = (raw || "").trim();
+      if (!/^\d+$/.test(s)) return null;
+      const n = Number(s);
+      if (!Number.isFinite(n)) return null;
+      // Heuristic: if user pasted milliseconds (13 digits), convert
+      if (s.length >= 13) return Math.floor(n / 1000);
+      return Math.floor(n);
+    }
+
+    /**********************
+     * Countdown logic
+     **********************/
+    function pad2(n) { return String(n).padStart(2, "0"); }
+
+    function updateDisplay(diffSeconds) {
+      if (diffSeconds <= 0) {
+        // Time reached
+        uDays.style.display = "none";
+        uHours.style.display = "none";
+        uMinutes.style.display = "none";
+        uSeconds.style.display = "";
+
+        daysEl.textContent = "0";
+        hoursEl.textContent = "0";
+        minutesEl.textContent = "0";
+        secondsEl.textContent = "0";
+
+        meta.textContent = "Time reached.";
+        return;
+      }
+
+      const days = Math.floor(diffSeconds / 86400);
+      diffSeconds -= days * 86400;
+
+      const hours = Math.floor(diffSeconds / 3600);
+      diffSeconds -= hours * 3600;
+
+      const minutes = Math.floor(diffSeconds / 60);
+      const seconds = diffSeconds - minutes * 60;
+
+      // Hide leading zero units and keep everything centered
+      uDays.style.display = (days > 0) ? "" : "none";
+      uHours.style.display = (days > 0 || hours > 0) ? "" : "none";
+      uMinutes.style.display = (days > 0 || hours > 0 || minutes > 0) ? "" : "none";
+      uSeconds.style.display = "";
+
+      daysEl.textContent = String(days);
+      hoursEl.textContent = String(hours);
+      minutesEl.textContent = String(minutes);
+      secondsEl.textContent = String(seconds);
+
+      const targetDate = new Date(targetUnix * 1000);
+      meta.textContent = `Target: ${targetDate.toLocaleString()}   •   Unix: ${targetUnix}`;
+    }
+
+    function tick() {
+      const now = Math.floor(Date.now() / 1000);
+      const diff = targetUnix - now;
+      updateDisplay(diff);
+    }
+
+    function startCountdown() {
+      if (timerHandle) clearInterval(timerHandle);
+      tick();
+      timerHandle = setInterval(tick, 250); // smooth-ish updates; seconds still integer
+    }
+
+    /**********************
+     * Init / Event handlers
+     **********************/
+    function clearTarget() {
+      targetUnix = null;
+      deleteCookie(COOKIE_TARGET);
+    }
+
+    function setTarget(unixSeconds) {
+      targetUnix = unixSeconds;
+      setCookie(COOKIE_TARGET, String(unixSeconds));
+    }
+
+    resetBtn.addEventListener("click", () => {
+      clearTarget();
+      openModal();
+    });
+
+    saveBtn.addEventListener("click", () => {
+      const parsed = parseUnixSeconds(unixInput.value);
+      if (parsed == null) {
+        errorEl.textContent = "Please enter a valid Unix timestamp (numbers only).";
+        return;
+      }
+      const now = Math.floor(Date.now() / 1000);
+      if (parsed <= now) {
+        errorEl.textContent = "That time is not in the future. Enter a future Unix timestamp.";
+        return;
+      }
+
+      setTarget(parsed);
+
+      // Save credit from modal (optional)
+      saveCreditToCookies(creditTextInput.value, creditUrlInput.value);
+
+      closeModal();
+      startCountdown();
+    });
+
+    useNowPlusBtn.addEventListener("click", () => {
+      const now = Math.floor(Date.now() / 1000);
+      unixInput.value = String(now + 3600);
+      unixInput.focus();
+    });
+
+    // Enter key submits
+    unixInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") saveBtn.click();
+    });
+
+    saveCreditBtn.addEventListener("click", () => {
+      saveCreditToCookies(creditTextInline.value, creditUrlInline.value);
+    });
+
+    // Load saved target if present
+    (function init() {
+      loadCreditFromCookies();
+
+      const saved = getCookie(COOKIE_TARGET);
+      if (saved && /^\d+$/.test(saved)) {
+        targetUnix = Number(saved);
+      }
+
+      // If missing or invalid or in the past, prompt
+      const now = Math.floor(Date.now() / 1000);
+      if (!targetUnix || !Number.isFinite(targetUnix) || targetUnix <= now) {
+        clearTarget();
+        openModal();
+      } else {
+        startCountdown();
+      }
+    })();
+  </script>
+</body>
+</html>
