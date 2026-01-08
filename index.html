@@ -4,280 +4,287 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Countdown</title>
+
   <style>
     :root{
       --bg: #0b0f14;
-      --panel: rgba(10, 14, 20, 0.72);
-      --panel-border: rgba(255,255,255,0.12);
-      --text: rgba(255,255,255,0.92);
-      --muted: rgba(255,255,255,0.70);
-      --muted2: rgba(255,255,255,0.55);
-      --accent: rgba(255,255,255,0.92);
-      --shadow: 0 10px 30px rgba(0,0,0,0.45);
-      --radius: 18px;
+      --panel: rgba(10,14,20,0.68);
+      --panel-border: rgba(255,255,255,0.14);
+      --text: rgba(255,255,255,0.95);
+      --muted: rgba(255,255,255,0.65);
+      --accent: #ffffff;
+      --shadow: 0 18px 60px rgba(0,0,0,0.55);
+      --radius: 22px;
     }
 
-    * { box-sizing: border-box; }
+    *{ box-sizing:border-box; }
     html, body { height: 100%; margin: 0; }
+
     body{
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
       background: var(--bg);
       color: var(--text);
       overflow: hidden;
     }
 
+    /* Background image — no darkening */
     .bg{
       position: fixed;
       inset: 0;
-      background:
-        linear-gradient(to bottom, rgba(0,0,0,0.55), rgba(0,0,0,0.70)),
-        var(--bg-img, none);
+      background: var(--bg-img, none);
       background-size: cover;
       background-position: center;
-      filter: saturate(1.05) contrast(1.02);
-      transform: scale(1.02);
     }
 
-    .vignette{
-      position: fixed;
-      inset: 0;
-      background: radial-gradient(circle at center, rgba(0,0,0,0) 0%, rgba(0,0,0,0.55) 75%, rgba(0,0,0,0.85) 100%);
-      pointer-events: none;
-    }
-
+    /* Layout */
     .wrap{
       position: relative;
-      height: 100%;
+      min-height: 100%;
       display: grid;
       place-items: center;
-      padding: 24px;
+      padding: 18px;
+      padding-bottom: 28px; /* a little breathing room */
     }
 
     .card{
-      width: min(940px, 96vw);
+      width: min(1100px, 96vw);
+      border-radius: var(--radius);
       border: 1px solid var(--panel-border);
       background: var(--panel);
-      border-radius: var(--radius);
       box-shadow: var(--shadow);
-      backdrop-filter: blur(10px);
       padding: 22px 22px 18px;
+      backdrop-filter: blur(10px);
     }
 
     .topbar{
-      display: flex;
-      align-items: center;
+      display:flex;
       justify-content: space-between;
+      align-items:center;
       gap: 12px;
       margin-bottom: 14px;
     }
 
     .title{
       font-size: 14px;
-      letter-spacing: 0.14em;
+      letter-spacing: 0.22em;
       text-transform: uppercase;
       color: var(--muted);
       user-select: none;
+      white-space: nowrap;
     }
 
     .btn{
-      appearance: none;
       border: 1px solid var(--panel-border);
-      background: rgba(255,255,255,0.06);
-      color: var(--text);
-      border-radius: 12px;
-      padding: 8px 12px;
-      cursor: pointer;
-      transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
-      font-weight: 600;
-      font-size: 13px;
-    }
-    .btn:hover{
       background: rgba(255,255,255,0.10);
-      border-color: rgba(255,255,255,0.22);
-      transform: translateY(-1px);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 10px 14px;
+      font-weight: 800;
+      font-size: 14px;
+      cursor: pointer;
+      transition: transform 120ms ease, background 120ms ease;
+      white-space: nowrap;
     }
-    .btn:active{ transform: translateY(0px); }
+    .btn:hover{ background: rgba(255,255,255,0.16); transform: translateY(-1px); }
+    .btn:active{ transform: translateY(0); }
 
+    /* Countdown: default vertical (good for phones) */
     .countdown{
-      display: flex;
-      align-items: stretch;
-      justify-content: center;
+      display: grid;
+      grid-template-columns: 1fr;
       gap: 14px;
-      padding: 10px 6px 6px;
-      flex-wrap: wrap;
+      align-items: stretch;
+      justify-items: stretch;
     }
 
     .unit{
-      min-width: 150px;
-      padding: 18px 16px 14px;
-      border-radius: 16px;
-      border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(0,0,0,0.22);
-      text-align: center;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: baseline;
+      gap: 12px;
+      padding: 18px 18px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(0,0,0,0.25);
     }
 
     .num{
       font-variant-numeric: tabular-nums;
-      font-size: clamp(44px, 6vw, 78px);
-      font-weight: 800;
-      line-height: 1.05;
+      font-weight: 900;
+      line-height: 1;
       color: var(--accent);
-      text-shadow: 0 6px 24px rgba(0,0,0,0.35);
+      /* BIG but safe on phones */
+      font-size: clamp(56px, 11vw, 120px);
+      text-shadow: 0 10px 30px rgba(0,0,0,0.45);
     }
 
     .label{
-      margin-top: 8px;
-      font-size: 12px;
-      letter-spacing: 0.18em;
+      font-size: 13px;
+      letter-spacing: 0.22em;
       text-transform: uppercase;
-      color: var(--muted2);
+      color: var(--muted);
+      justify-self: end;
+      align-self: center;
+      white-space: nowrap;
     }
 
     .meta{
-      margin-top: 10px;
+      margin-top: 14px;
       text-align: center;
       font-size: 13px;
-      color: var(--muted2);
+      color: var(--muted);
+      line-height: 1.35;
       user-select: none;
+      word-break: break-word;
     }
 
-    /* Prompt modal */
+    /* On wider landscape/desktop: switch to horizontal "cards" */
+    @media (min-width: 820px) and (orientation: landscape){
+      .card{ padding: 26px 28px 22px; }
+      .countdown{
+        grid-template-columns: repeat(4, minmax(160px, 1fr));
+        gap: 18px;
+      }
+      .unit{
+        grid-template-columns: 1fr;
+        text-align: center;
+        padding: 26px 18px 22px;
+      }
+      .label{
+        justify-self: center;
+        margin-top: 10px;
+      }
+      .num{ font-size: clamp(76px, 6.2vw, 140px); }
+    }
+
+    /* Modal */
     .modal{
       position: fixed;
       inset: 0;
       display: none;
       place-items: center;
-      padding: 24px;
-      background: rgba(0,0,0,0.65);
-      backdrop-filter: blur(6px);
+      padding: 18px;
+      background: rgba(0,0,0,0.78);
       z-index: 10;
     }
     .modal.open{ display: grid; }
 
     .modalCard{
-      width: min(640px, 96vw);
+      width: min(560px, 95vw);
       border-radius: var(--radius);
+      background: rgba(15,20,27,0.96);
       border: 1px solid var(--panel-border);
-      background: rgba(10,14,20,0.86);
       box-shadow: var(--shadow);
       padding: 18px;
     }
-    .modalHeader{
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 10px;
-    }
+
     .modalTitle{
-      font-weight: 800;
-      font-size: 16px;
-      letter-spacing: 0.02em;
-    }
-    .modalHint{
-      margin: 0 0 12px;
-      font-size: 13px;
-      color: var(--muted);
-      line-height: 1.5;
-    }
-    .field label{
-      display: block;
-      font-size: 12px;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--muted2);
-      margin: 0 0 6px;
-    }
-    .input{
-      width: 100%;
-      padding: 12px 12px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.16);
-      background: rgba(0,0,0,0.28);
-      color: var(--text);
-      outline: none;
-      font-size: 14px;
-    }
-    .input:focus{
-      border-color: rgba(255,255,255,0.28);
-      background: rgba(0,0,0,0.34);
-    }
-    .actions{
-      display: flex;
-      gap: 10px;
-      justify-content: flex-end;
-      align-items: center;
-      margin-top: 8px;
-    }
-    .error{
-      color: #ffb4b4;
-      font-size: 13px;
-      margin-top: 6px;
-      min-height: 18px;
+      font-size: 18px;
+      font-weight: 900;
+      margin-bottom: 8px;
+      letter-spacing: 0.01em;
     }
 
-    /* Image credit box (display-only) */
+    .modalHint{
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 12px;
+      line-height: 1.4;
+    }
+
+    .input{
+      width: 100%;
+      padding: 14px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.20);
+      background: rgba(0,0,0,0.42);
+      color: var(--text);
+      font-size: 16px;
+      outline: none;
+    }
+    .input:focus{
+      border-color: rgba(255,255,255,0.34);
+      background: rgba(0,0,0,0.50);
+    }
+
+    .error{
+      margin-top: 8px;
+      min-height: 18px;
+      color: #ffb3b3;
+      font-size: 14px;
+    }
+
+    .modalActions{
+      display:flex;
+      justify-content: space-between;
+      align-items:center;
+      gap: 10px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+
+    /* Credit box with auto-hide */
     .credit{
       position: fixed;
       left: 14px;
       bottom: 14px;
-      width: min(360px, calc(100vw - 28px));
+      padding: 10px 14px;
       border-radius: 14px;
-      border: 1px solid rgba(255,255,255,0.14);
-      background: rgba(10,14,20,0.72);
-      backdrop-filter: blur(10px);
-      box-shadow: 0 10px 24px rgba(0,0,0,0.35);
-      padding: 10px 10px 10px;
-      z-index: 5;
-    }
-    .creditTitle{
-      font-size: 12px;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--muted2);
-      margin-bottom: 6px;
-      user-select: none;
-    }
-    .creditLink{
-      display: inline-block;
-      color: var(--text);
+      background: rgba(0,0,0,0.45);
+      border: 1px solid rgba(255,255,255,0.20);
       font-size: 13px;
-      text-decoration: none;
-      border-bottom: 1px dashed rgba(255,255,255,0.35);
-      padding-bottom: 1px;
-      max-width: 100%;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      z-index: 5;
+      transition: opacity 400ms ease, transform 400ms ease;
+      opacity: 1;
+      transform: translateY(0);
+      max-width: min(92vw, 520px);
     }
-    .creditLink:hover{ border-bottom-color: rgba(255,255,255,0.70); }
+    .credit.hidden{
+      opacity: 0;
+      transform: translateY(8px);
+      pointer-events: none;
+    }
+    .credit a{
+      color: white;
+      text-decoration: none;
+      border-bottom: 1px dashed rgba(255,255,255,0.5);
+    }
+
+    /* Better spacing on very small screens */
+    @media (max-width: 380px){
+      .unit{ padding: 16px 14px; }
+      .label{ font-size: 12px; letter-spacing: 0.18em; }
+      .btn{ padding: 9px 12px; }
+    }
   </style>
 </head>
 
 <body>
   <div class="bg" id="bg"></div>
-  <div class="vignette"></div>
 
   <div class="wrap">
-    <div class="card" role="main" aria-live="polite">
+    <div class="card">
       <div class="topbar">
         <div class="title">Countdown</div>
-        <button class="btn" id="resetBtn" type="button" title="Clear saved target time">Reset</button>
+        <button class="btn" id="resetBtn" type="button">Reset</button>
       </div>
 
-      <div class="countdown" id="countdown">
+      <div class="countdown" aria-live="polite">
         <div class="unit" id="uDays">
           <div class="num" id="days">0</div>
           <div class="label">Days</div>
         </div>
+
         <div class="unit" id="uHours">
           <div class="num" id="hours">0</div>
           <div class="label">Hours</div>
         </div>
+
         <div class="unit" id="uMinutes">
           <div class="num" id="minutes">0</div>
           <div class="label">Minutes</div>
         </div>
+
         <div class="unit" id="uSeconds">
           <div class="num" id="seconds">0</div>
           <div class="label">Seconds</div>
@@ -290,45 +297,61 @@
 
   <div class="modal" id="modal" aria-modal="true" role="dialog">
     <div class="modalCard">
-      <div class="modalHeader">
-        <div class="modalTitle">Set target Unix time</div>
-        <button class="btn" id="useNowPlusBtn" type="button" title="Fill example: now + 1 hour">Now + 1h</button>
-      </div>
+      <div class="modalTitle">Set Unix Timestamp</div>
+      <div class="modalHint" id="hint">Enter a Unix timestamp in <b>seconds</b>.</div>
 
-      <p class="modalHint">
-        Enter a <b>Unix timestamp in seconds</b> (example: <span id="exampleTs"></span>).<br/>
-        If you paste milliseconds (13 digits), it will auto-convert by dividing by <code>1000</code>.
-      </p>
-
-      <div class="field">
-        <label for="unixInput">Unix time (seconds)</label>
-        <input class="input" id="unixInput" inputmode="numeric" placeholder="e.g. 1767225600" />
-      </div>
-
+      <input class="input" id="unixInput" inputmode="numeric" placeholder="e.g. 1767225600" />
       <div class="error" id="error"></div>
 
-      <div class="actions">
-        <button class="btn" id="saveBtn" type="button">Save & Start</button>
+      <div class="modalActions">
+        <button class="btn" id="nowPlusBtn" type="button">Now + 1h</button>
+        <button class="btn" id="saveBtn" type="button">Start</button>
       </div>
     </div>
   </div>
 
-  <div class="credit" id="creditBox">
-    <div class="creditTitle">Image</div>
-    <a class="creditLink" id="creditLink" href="#" target="_blank" rel="noopener noreferrer"></a>
+  <div class="credit" id="credit">
+    Image:
+    <a id="creditLink" target="_blank" rel="noopener noreferrer"></a>
   </div>
 
   <script>
-    /**********************
-     * CONFIG (edit these)
-     **********************/
-    const BACKGROUND_IMAGE = "background.jpg"; // put this file next to index.html
-    const IMAGE_CREDIT_TEXT = "NASA - James Webb: Carina Nebula";
-    const IMAGE_CREDIT_URL  = "https://www.flickr.com/photos/nasawebbtelescope/52259221868/in/album-72177720300469752"; // replace with the exact page if you want
+    /* CONFIG */
+    const BACKGROUND_IMAGE = "background.jpg";
+    const IMAGE_CREDIT_TEXT = "NASA – James Webb: Carina Nebula";
+    const IMAGE_CREDIT_URL  = "https://images.nasa.gov/";
 
-    /**********************
-     * Cookie helpers
-     **********************/
+    const COOKIE = "countdown_target_unix";
+
+    const bg = document.getElementById("bg");
+    bg.style.setProperty("--bg-img", `url("${BACKGROUND_IMAGE}")`);
+
+    const credit = document.getElementById("credit");
+    const creditLink = document.getElementById("creditLink");
+    creditLink.textContent = IMAGE_CREDIT_TEXT;
+    creditLink.href = IMAGE_CREDIT_URL;
+
+    // Auto-hide credit after 10 seconds
+    window.addEventListener("load", () => {
+      setTimeout(() => credit.classList.add("hidden"), 10000);
+    });
+
+    const modal = document.getElementById("modal");
+    const input = document.getElementById("unixInput");
+    const error = document.getElementById("error");
+    const hint = document.getElementById("hint");
+
+    const uDays = document.getElementById("uDays");
+    const uHours = document.getElementById("uHours");
+    const uMinutes = document.getElementById("uMinutes");
+    const uSeconds = document.getElementById("uSeconds");
+
+    const daysEl = document.getElementById("days");
+    const hoursEl = document.getElementById("hours");
+    const minutesEl = document.getElementById("minutes");
+    const secondsEl = document.getElementById("seconds");
+    const meta = document.getElementById("meta");
+
     function setCookie(name, value, days=365) {
       const maxAge = days * 24 * 60 * 60;
       document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(value)}; Max-Age=${maxAge}; Path=/; SameSite=Lax`;
@@ -345,91 +368,44 @@
       document.cookie = `${encodeURIComponent(name)}=; Max-Age=0; Path=/; SameSite=Lax`;
     }
 
-    const el = (id) => document.getElementById(id);
-
-    const bg = el("bg");
-    const modal = el("modal");
-    const unixInput = el("unixInput");
-    const exampleTs = el("exampleTs");
-    const errorEl = el("error");
-
-    const daysEl = el("days");
-    const hoursEl = el("hours");
-    const minutesEl = el("minutes");
-    const secondsEl = el("seconds");
-
-    const uDays = el("uDays");
-    const uHours = el("uHours");
-    const uMinutes = el("uMinutes");
-    const uSeconds = el("uSeconds");
-
-    const meta = el("meta");
-    const resetBtn = el("resetBtn");
-    const saveBtn = el("saveBtn");
-    const useNowPlusBtn = el("useNowPlusBtn");
-
-    const creditLink = el("creditLink");
-
-    const COOKIE_TARGET = "countdown_target_unix";
-    let targetUnix = null; // seconds
-    let timerHandle = null;
-
-    /**********************
-     * Background + credit
-     **********************/
-    if (BACKGROUND_IMAGE && BACKGROUND_IMAGE.trim() !== "") {
-      bg.style.setProperty("--bg-img", `url("${BACKGROUND_IMAGE}")`);
-    } else {
-      bg.style.setProperty("--bg-img", "none");
-    }
-
-    function normalizeUrl(url) {
-      const u = (url || "").trim();
-      if (!u) return "";
-      if (/^https?:\/\//i.test(u)) return u;
-      return "https://" + u;
-    }
-
-    (function renderCredit(){
-      const u = normalizeUrl(IMAGE_CREDIT_URL);
-      creditLink.textContent = (IMAGE_CREDIT_TEXT || "").trim() || "Image credit";
-      if (u) {
-        creditLink.href = u;
-      } else {
-        // no link; keep it non-clickable
-        creditLink.removeAttribute("href");
-      }
-    })();
-
-    /**********************
-     * Modal
-     **********************/
-    function openModal() {
-      modal.classList.add("open");
-      errorEl.textContent = "";
-      const now = Math.floor(Date.now() / 1000);
-      exampleTs.textContent = String(now + 24 * 60 * 60);
-      setTimeout(() => unixInput.focus(), 0);
-    }
-    function closeModal() {
-      modal.classList.remove("open");
-    }
-
     function parseUnixSeconds(raw) {
       const s = (raw || "").trim();
       if (!/^\d+$/.test(s)) return null;
       const n = Number(s);
       if (!Number.isFinite(n)) return null;
-      // If user pasted ms (13 digits), convert to seconds
+      // If user pasted ms (13+ digits), auto-convert
       if (s.length >= 13) return Math.floor(n / 1000);
       return Math.floor(n);
     }
 
-    /**********************
-     * Countdown
-     **********************/
-    function updateDisplay(diffSeconds) {
-      if (diffSeconds <= 0) {
+    let targetUnix = null;
+    let timerHandle = null;
+
+    function openModal(){
+      error.textContent = "";
+      const now = Math.floor(Date.now() / 1000);
+      const example = now + 24*60*60;
+      hint.innerHTML = `Enter a Unix timestamp in <b>seconds</b>. Example: <b>${example}</b>.<br/>If you paste milliseconds (13 digits), it auto-converts.`;
+      modal.classList.add("open");
+      setTimeout(() => input.focus(), 0);
+    }
+
+    function closeModal(){
+      modal.classList.remove("open");
+    }
+
+    function clearTarget(){
+      targetUnix = null;
+      deleteCookie(COOKIE);
+    }
+
+    function setTarget(unixSeconds){
+      targetUnix = unixSeconds;
+      setCookie(COOKIE, String(unixSeconds));
+    }
+
+    function updateDisplay(diffSeconds){
+      if (diffSeconds <= 0){
         uDays.style.display = "none";
         uHours.style.display = "none";
         uMinutes.style.display = "none";
@@ -465,79 +441,59 @@
       secondsEl.textContent = String(seconds);
 
       const targetDate = new Date(targetUnix * 1000);
-      meta.textContent = `Target: ${targetDate.toLocaleString()}   •   Unix: ${targetUnix}`;
+      meta.textContent = `Target: ${targetDate.toLocaleString()} • Unix: ${targetUnix}`;
     }
 
-    function tick() {
+    function tick(){
       const now = Math.floor(Date.now() / 1000);
       updateDisplay(targetUnix - now);
     }
 
-    function startCountdown() {
+    function startCountdown(){
       if (timerHandle) clearInterval(timerHandle);
       tick();
       timerHandle = setInterval(tick, 250);
     }
 
-    /**********************
-     * Target persistence
-     **********************/
-    function clearTarget() {
-      targetUnix = null;
-      deleteCookie(COOKIE_TARGET);
-    }
-
-    function setTarget(unixSeconds) {
-      targetUnix = unixSeconds;
-      setCookie(COOKIE_TARGET, String(unixSeconds));
-    }
-
-    /**********************
-     * Events
-     **********************/
-    resetBtn.addEventListener("click", () => {
+    document.getElementById("resetBtn").addEventListener("click", () => {
       clearTarget();
       openModal();
     });
 
-    saveBtn.addEventListener("click", () => {
-      const parsed = parseUnixSeconds(unixInput.value);
-      if (parsed == null) {
-        errorEl.textContent = "Please enter a valid Unix timestamp (numbers only).";
+    document.getElementById("saveBtn").addEventListener("click", () => {
+      const parsed = parseUnixSeconds(input.value);
+      if (parsed == null){
+        error.textContent = "Please enter a valid Unix timestamp (numbers only).";
         return;
       }
       const now = Math.floor(Date.now() / 1000);
-      if (parsed <= now) {
-        errorEl.textContent = "That time is not in the future. Enter a future Unix timestamp.";
+      if (parsed <= now){
+        error.textContent = "That time is not in the future. Enter a future Unix timestamp.";
         return;
       }
-
       setTarget(parsed);
       closeModal();
       startCountdown();
     });
 
-    useNowPlusBtn.addEventListener("click", () => {
+    document.getElementById("nowPlusBtn").addEventListener("click", () => {
       const now = Math.floor(Date.now() / 1000);
-      unixInput.value = String(now + 3600);
-      unixInput.focus();
+      input.value = String(now + 3600);
+      input.focus();
     });
 
-    unixInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") saveBtn.click();
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") document.getElementById("saveBtn").click();
     });
 
-    /**********************
-     * Init
-     **********************/
-    (function init() {
-      const saved = getCookie(COOKIE_TARGET);
+    (function init(){
+      const saved = getCookie(COOKIE);
       if (saved && /^\d+$/.test(saved)) {
         targetUnix = Number(saved);
       }
 
       const now = Math.floor(Date.now() / 1000);
-      if (!targetUnix || !Number.isFinite(targetUnix) || targetUnix <= now) {
+      if (!targetUnix || !Number.isFinite(targetUnix) || targetUnix <= now){
         clearTarget();
         openModal();
       } else {
